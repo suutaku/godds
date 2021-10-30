@@ -66,7 +66,7 @@ clean:
 
 # 実ビルドタスク
 $(BINARIES): $(GO_FILES) $(GOPB_FILES) VERSION .git/HEAD
-	@go build -o $@ $(GO_BUILD) $(@:$(BINDIR)/%=$(ROOT_PACKAGE)/cmd/%)
+	@go mod tidy && go build -o $@ $(GO_BUILD) $(@:$(BINDIR)/%=$(ROOT_PACKAGE)/cmd/%)
 
 # protoc のビルド
 $(GOPB_FILES): $(PB_FILES) $(BINDIR)/protoc-gen-go
@@ -75,6 +75,8 @@ $(GOPB_FILES): $(PB_FILES) $(BINDIR)/protoc-gen-go
 		-I ./proto \
 		--go_out=./proto \
 		--go_opt=paths=source_relative \
+		--go-grpc_out=./proto \
+		--go-grpc_opt=paths=source_relative \
 		$(@:%.pb.go=%.proto)
 
 $(BINDIR)/protoc-gen-go: go.sum

@@ -18,11 +18,13 @@ type Connector struct {
 	dialer   net.Conn
 	listener *net.UDPConn
 	income   chan []byte
+	running  bool
 }
 
 func NewConnector(addr string, port string, proto string) *Connector {
 	ret := &Connector{
-		income: make(chan []byte),
+		income:  make(chan []byte),
+		running: true,
 	}
 	if addr == "" {
 		ret.addr = defaultAddress
@@ -42,6 +44,12 @@ func (c *Connector) Dial() {
 		panic(err)
 	}
 	c.dialer = conn
+	fmt.Println("Connector Dial")
+}
+
+func (c *Connector) Start() {
+	c.Dial()
+	c.Listen()
 }
 
 func (c *Connector) Listen() {
@@ -55,22 +63,24 @@ func (c *Connector) Listen() {
 	}
 	c.listener = conn
 	go func() {
-		for {
+		for c.running {
 			buf := make([]byte, 1024)
 			n, _, err := c.listener.ReadFrom(buf)
 			if err != nil {
 				fmt.Println(err)
 			}
 			if n > 0 {
-				c.income <- buf
+				c.income <- buf[:n]
 			}
 		}
 	}()
+	fmt.Println("Connector listen")
 }
 
 func (c *Connector) Stop() {
 	c.dialer.Close()
 	c.listener.Close()
+	c.running = false
 }
 
 func (c *Connector) Write(data []byte) error {

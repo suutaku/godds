@@ -12,3 +12,6 @@
 *.out
 ./.vscode
 ./bin
+bin/godds
+*/.DS_Store
+bin/godds
